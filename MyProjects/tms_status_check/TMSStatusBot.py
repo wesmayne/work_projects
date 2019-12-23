@@ -35,7 +35,7 @@ tms = {
 def send_request():
     for key, value in tms.items():
         r = requests.get(value)
-        if r.status_code != 300:
+        if r.status_code != 200:
             error_email(key, value, r.status_code)
 
 
@@ -59,10 +59,10 @@ def error_email(key, value, code):
     mailserver.quit()
 
 
-"""  
+
 try:
     send_request()
 except:
     print('This is to cater for when smtp is down')
-"""
+
 
