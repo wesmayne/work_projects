@@ -15,12 +15,16 @@ import sqlalchemy
 # instatiate the list of alpha ids
 alphaids = []
 trip_code = input("What is the trip code: ")
-pod_file = input("Paste the filename of the POD file you have pasted into the pod folder: ")
+pod_file = input(
+    "Paste the filename of the POD file you have pasted into the pod folder: "
+)
 correct = input("Are you sure the above variables are correct? (y/n): ")
 
 while correct == "n":
     trip_code = input("What is the trip code: ")
-    pod_file = input("Paste the filename of the POD file you have pasted into the pod folder: ")
+    pod_file = input(
+        "Paste the filename of the POD file you have pasted into the pod folder: "
+    )
     correct = input("Are you sure the above variables are correct? (y/n): ")
 
 # read in the 2 program variables
@@ -55,21 +59,26 @@ def sql_import():
         row = re.sub("[(),]", "", row)
         alphaids.append(row)
 
+
 # create a new folder in directory for all shipmentmasterIDs and copy in the POD file
 def create_and_copy():
     for alphaid in alphaids:
         os.mkdir(dir_path + alphaid)
         os.popen(f"copy {pod_dir+pod_file} {dir_path+alphaid}")
 
+
 # insert new line into shipmentmastercomment table for each delivery
 def sql_insert():
 
-    sql_insert = f"""INSERT INTO SHIPMENTMASTERCOMMENT(SHIPMENTMASTERID,COMMENTTYPEID,SUBJECT,CONTENT,CREATEDBYID)
-                VALUES({alphaid},961,'MaasaiPath','{pod_file}')
-            """
+    for alphaid in alphaids:
+        conn.execute(
+            f"""INSERT INTO SHIPMENTMASTERCOMMENT(SHIPMENTMASTERID,COMMENTTYPEID,SUBJECT,CONTENT,CREATEDBYID)
+                VALUES({alphaid},961,'MaasaiPath','{pod_file}',1)"""
+        )
     
     conn.close()
 
 
 sql_import()
 create_and_copy()
+sql_insert()
