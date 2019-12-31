@@ -3,8 +3,10 @@ the program will then add that POD to every delivery under the named tripcode
 
 To DO:
 - error handling
-- handle if attachment already exists (dontoverride)
-- 
+- handle if attachment already exists (dontoverride 961 SMCid)
+- bundle into .exe
+- correct config variables
+- update config read path
 """
 import configparser
 import os
@@ -16,14 +18,14 @@ import sqlalchemy
 alphaids = []
 trip_code = input("What is the trip code: ")
 pod_file = input(
-    "Paste the filename of the POD file you have pasted into the pod folder: "
+    "Filename of the POD file you have pasted into the pod folder: "
 )
 correct = input("Are you sure the above variables are correct? (y/n): ")
 
 while correct == "n":
     trip_code = input("What is the trip code: ")
     pod_file = input(
-        "Paste the filename of the POD file you have pasted into the pod folder: "
+        "Filename of the POD file you have pasted into the pod folder: "
     )
     correct = input("Are you sure the above variables are correct? (y/n): ")
 
@@ -45,6 +47,10 @@ connection_string = f"mssql+pymssql://{user}:{password}@{servername}/{database}"
 engine = sqlalchemy.create_engine(connection_string)
 conn = engine.connect()
 
+# validate the variables collecting in the first section
+def validate_vars():
+    pass
+    
 # retrieve a list of all shipmentmasterIDs for the named tripcode
 def sql_import():
     sql_query = f"""select ALPHAID from SHIPMENT SHP 
@@ -63,22 +69,23 @@ def sql_import():
 # create a new folder in directory for all shipmentmasterIDs and copy in the POD file
 def create_and_copy():
     for alphaid in alphaids:
-        os.mkdir(dir_path + alphaid)
+
+        if not os.path.exists(dir_path+alphaid):
+            os.mkdir(dir_path + alphaid)
         os.popen(f"copy {pod_dir+pod_file} {dir_path+alphaid}")
 
 
 # insert new line into shipmentmastercomment table for each delivery
 def sql_insert():
-
     for alphaid in alphaids:
         conn.execute(
             f"""INSERT INTO SHIPMENTMASTERCOMMENT(SHIPMENTMASTERID,COMMENTTYPEID,SUBJECT,CONTENT,CREATEDBYID)
                 VALUES({alphaid},961,'MaasaiPath','{pod_file}',1)"""
         )
-    
     conn.close()
 
 
 sql_import()
 create_and_copy()
-sql_insert()
+
+#sql_insert()
