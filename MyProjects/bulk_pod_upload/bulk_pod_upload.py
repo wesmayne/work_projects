@@ -5,19 +5,15 @@ AND actual delivery time to planned delivery time
 import configparser
 import os
 import re
-import sys
 
 import sqlalchemy
 
 # instatiate the list of alpha ids
 alphaids = []
 
-# set working directory to file path
-os.chdir(sys.path[0])
-
 # read in the program variables
 config = configparser.ConfigParser()
-config.read("config.ini")
+config.read("C:\Script\Batch_Upload\config.ini")
 dir_path = config["VARS"]["dir_path"]
 pod_dir = config["VARS"]["pod_dir"]
 
@@ -71,11 +67,16 @@ def sql_insert_update():
     while update not in ('y','n'):
         update = input("Please enter a valid selection (y/n): ")
     for alphaid in alphaids:
-        '''conn.execute(
+        conn.execute(
             f"""INSERT INTO SHIPMENTMASTERCOMMENT(SHIPMENTMASTERID,COMMENTTYPEID,SUBJECT,CONTENT,CREATEDON,CREATEDBYID)
-                VALUES({alphaid},(SELECT MAX(COMMENTTYPEID)+1 FROM SHIPMENTMASTERCOMMENT WHERE SHIPMENTMASTERID = {alphaid} AND COMMENTTYPEID BETWEEN 961 AND 969)
+                VALUES({alphaid},
+                (SELECT
+                CASE WHEN (SELECT MAX(SHIPMENTMASTERID) FROM SHIPMENTMASTERCOMMENT WHERE SHIPMENTMASTERID = {alphaid} AND COMMENTTYPEID BETWEEN 961 AND 969) IS NULL 
+                THEN 961
+                ELSE (SELECT MAX(COMMENTTYPEID)+1 FROM SHIPMENTMASTERCOMMENT WHERE SHIPMENTMASTERID = {alphaid} AND COMMENTTYPEID BETWEEN 961 AND 969)
+                END)
                 ,'MaasaiPath','{pod_file}',GETDATE(),1)"""
-        )'''
+        )
         if update == 'y':
             conn.execute(
             f"""UPDATE SHIPMENT SET ACTUALCOLLECTDATE = DELIVERYDATE, 
